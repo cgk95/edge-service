@@ -1,0 +1,16 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress # 인그레스 유형의 객체 생성
+metadata:
+  name: polar-ingress # 인그레스 객체의 이름
+spec:
+  ingressClassName: nginx # 인그레스 객체를 관리할 인그레스 컨트롤러 설정
+  rules:
+    - http:
+        paths:
+          - path: / # 모든 경로 요청에 대해
+            pathType: Prefix
+            backend:
+              service:
+                name: edge-service # 트래픽을 전달할 서비스 객체의 이름
+                port:
+                  number: 80 # 트래픽을 전달할 서비스의 포트번호
