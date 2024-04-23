@@ -7,10 +7,12 @@ import org.springframework.security.web.server.SecurityWebFilterChain;
 
 public class SecurityConfig {
     @Bean
-    SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http){
-        return http
+    SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
+        http
                 .authorizeExchange(exchange -> exchange.anyExchange().authenticated())
-                .formLogin(Customizer.withDefaults()) // 스프링 보안 Customizer 인터페이스를 통해 제공되는 기본 설정
+                .oauth2Login(Customizer.withDefaults()) // OAuth2/OIDC를 사용한 사용자 인증을 활성화한다
                 .build();
+
+        return http.build();
     }
 }

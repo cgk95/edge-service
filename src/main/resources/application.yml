@@ -84,7 +84,18 @@ spring:
     timeout: 10m
     redis:
       namespace: polar:edge
-
+  security:
+    oauth2:
+      client:
+        registration:
+          keycloak: # 식별자
+            client-id: edge-service
+            client-secret: polar-keycloak-secret
+            scope: # 클라이언트가 접근 권한을 갖기 원하는 영역의 목록. OIDC를 사용하기 위해서는 범위를 openid로 설정하고 이를 인증서버에 알려야만 한다.
+              - openid
+        provider:
+          keycloak: # 위의 식별자와 동일하여야 한다
+            issuer-uri: http://localhost:8080/realms/PolarBookshop
 
 resilience4j:
   circuitbreaker:
