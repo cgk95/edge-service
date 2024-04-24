@@ -33,6 +33,7 @@ spring:
               burstCapacity: 20
               requestedTokens: 1 # 하나의 요청 처리에 몇 개의 토큰이 사용되는 지 지정
         - SaveSession # 요청을 서비스로 전달하기 전에 세션 데이터를 저장한다
+        - TokenRelay # 다른 서비스를 호출할 때 액세스 토큰 전달을 활성화한다
 
       httpclient:
         connect-timeout: 2000
@@ -97,7 +98,7 @@ spring:
             client-id: edge-service
             client-secret: polar-keycloak-secret
             scope: # 클라이언트가 접근 권한을 갖기 원하는 영역의 목록. OIDC를 사용하기 위해서는 범위를 openid로 설정하고 이를 인증서버에 알려야만 한다.
-              - openid
+              - openid, roles
         provider:
           keycloak: # 위의 식별자와 동일하여야 한다
             issuer-uri: http://localhost:8080/realms/PolarBookshop
