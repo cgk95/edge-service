@@ -16,9 +16,6 @@ import org.testcontainers.utility.DockerImageName;
 )
 class EdgeServiceApplicationTests {
 
-    @Test
-    void contextLoads() {
-    }
 
     private static final int REDIS_PORT = 6379;
 

@@ -33,6 +33,7 @@ spring:
               burstCapacity: 20
               requestedTokens: 1 # 하나의 요청 처리에 몇 개의 토큰이 사용되는 지 지정
         - SaveSession # 요청을 서비스로 전달하기 전에 세션 데이터를 저장한다
+        - TokenRelay # 다른 서비스를 호출할 때 액세스 토큰 전달을 활성화한다
 
       httpclient:
         connect-timeout: 2000
@@ -43,7 +44,7 @@ spring:
           max-life-time: 60s
       routes:
         - id: catalog-route
-          uri: ${CATALOG_SERVICE_URL:http://localhost:9001}/books # 환경변수, 환경변수 없으면 : 뒤의 값을 기본으로 사용
+          uri: ${CATALOG_SERVICE_URL:http://localhost:9001}/books} # 환경변수, 환경변수 없으면 : 뒤의 값을 기본으로 사용
           predicates:
             - Path=/books/**
           filters:
@@ -52,13 +53,18 @@ spring:
                 name: catalogCircuitBreaker # 서킷 브레이커 이름
                 fallbackUri: forward:/catalog:fallback # 회로가 개방상태일 때 요청을 여기로 전달
         - id: order-route
-          uri: ${ORDER_SERVICE_URL:http://localhost:9002}/orders
+          uri: ${ORDER_SERVICE_URL:http://localhost:9002/orders}
           predicates:
             - Path=/orders/**
           filters:
             - name: CircuitBreaker
               args:
                 name: orderCircuitBreaker # 서킷 브레이커 이름 , 폴백 URI 가 없는 시나리오
+        - id: spa-route
+          uri: ${SPA_URL:http://localhost:9004}
+          predicates:
+            - Path=/,/*.css,/*.js,/favicon.ico
+
       redis-rate-limiter:
         include-headers: true # 기본이 false, 사용률 제한 관련 정보를 포함한 헤더를 응답에 포함할지 결정할 수 있다.
 
@@ -68,10 +74,10 @@ spring:
       request-read-timeout: 5000
       fail-fast: false
       retry:
-          max-attempts: 6
-          initial-interval: 1000 # 1s
-          max-interval: 2000 # 2s
-          multiplier: 1.1
+        max-attempts: 6
+        initial-interval: 1000 # 1s
+        max-interval: 2000 # 2s
+        multiplier: 1.1
 
   redis:
     connect-timeout: 2s
@@ -84,15 +90,26 @@ spring:
     timeout: 10m
     redis:
       namespace: polar:edge
-
+  security:
+    oauth2:
+      client:
+        registration:
+          keycloak: # 식별자
+            client-id: edge-service
+            client-secret: polar-keycloak-secret
+            scope: # 클라이언트가 접근 권한을 갖기 원하는 영역의 목록. OIDC를 사용하기 위해서는 범위를 openid로 설정하고 이를 인증서버에 알려야만 한다.
+              - openid, roles
+        provider:
+          keycloak: # 위의 식별자와 동일하여야 한다
+            issuer-uri: http://localhost:8080/realms/PolarBookshop
 
 resilience4j:
   circuitbreaker:
     configs: # 모든 서킷 브레이커에 대한 기본 설정
       default:
-        sliding-window-size:  20 # 회로 폐쇄 상태일 때 호출의 결과를 기록하는 슬라이딩 윈도 크기
+        sliding-window-size: 20 # 회로 폐쇄 상태일 때 호출의 결과를 기록하는 슬라이딩 윈도 크기
         permitted-number-of-calls-in-half-open-state: 5 # 회로가 반개방일 때 허용되는 호출의 수
-        failure-rate-threshold:  50
+        failure-rate-threshold: 50
         wait-duration-in-open-state: 15000 # 개방에서 반개방 상태로 갈 때까지 기다리는 시간
   timelimiter:
     configs: # 모든 시간 제한에 대한 기본 설정, 네티 클라이언트에서 정의한 타임아웃보다 높은 우선순위를 갖는다
