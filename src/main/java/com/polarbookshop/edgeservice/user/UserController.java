@@ -9,9 +9,14 @@ import reactor.core.publisher.Mono;
 
 @RestController
 public class UserController {
-    @GetMapping("/user")
+    @GetMapping("user")
     public Mono<User> getUser(@AuthenticationPrincipal OidcUser oidcUser) {
-        var user = new User(oidcUser.getPreferredUsername(), oidcUser.getGivenName(), oidcUser.getFamilyName(), oidcUser.getClaimAsStringList("roles"));
+        var user = new User(
+                oidcUser.getPreferredUsername(),
+                oidcUser.getGivenName(),
+                oidcUser.getFamilyName(),
+                oidcUser.getClaimAsStringList("roles")
+        );
         return Mono.just(user);
     }
 }

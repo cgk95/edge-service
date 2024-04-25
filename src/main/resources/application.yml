@@ -15,6 +15,8 @@ spring:
   cloud:
     gateway:
       default-filters: # 기본 필터 목록
+        - SaveSession # 요청을 서비스로 전달하기 전에 세션 데이터를 저장한다
+        - TokenRelay # 다른 서비스를 호출할 때 액세스 토큰 전달을 활성화한다
         - name: Retry # 재시도 필터
           args:
             retries: 3
@@ -32,8 +34,6 @@ spring:
               replenishRate: 10 # 초당 버킷에 떨어지는 토큰의 수
               burstCapacity: 20
               requestedTokens: 1 # 하나의 요청 처리에 몇 개의 토큰이 사용되는 지 지정
-        - SaveSession # 요청을 서비스로 전달하기 전에 세션 데이터를 저장한다
-        - TokenRelay # 다른 서비스를 호출할 때 액세스 토큰 전달을 활성화한다
 
       httpclient:
         connect-timeout: 2000
@@ -90,6 +90,7 @@ spring:
     timeout: 10m
     redis:
       namespace: polar:edge
+
   security:
     oauth2:
       client:
@@ -98,7 +99,8 @@ spring:
             client-id: edge-service
             client-secret: polar-keycloak-secret
             scope: # 클라이언트가 접근 권한을 갖기 원하는 영역의 목록. OIDC를 사용하기 위해서는 범위를 openid로 설정하고 이를 인증서버에 알려야만 한다.
-              - openid,roles
+              - openid
+              - roles
         provider:
           keycloak: # 위의 식별자와 동일하여야 한다
             issuer-uri: http://localhost:8080/realms/PolarBookshop
@@ -108,7 +110,7 @@ resilience4j:
     configs: # 모든 서킷 브레이커에 대한 기본 설정
       default:
         sliding-window-size: 20 # 회로 폐쇄 상태일 때 호출의 결과를 기록하는 슬라이딩 윈도 크기
-        permitted-number-of-calls-in-half-open-state: 5 # 회로가 반개방일 때 허용되는 호출의 수
+        permitted-number-of-calls-in-half-open-state: 10 # 회로가 반개방일 때 허용되는 호출의 수
         failure-rate-threshold: 50
         wait-duration-in-open-state: 15000 # 개방에서 반개방 상태로 갈 때까지 기다리는 시간
   timelimiter:
