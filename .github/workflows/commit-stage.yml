@@ -3,7 +3,7 @@ on: push
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: polarbookshop/edge-service
+  IMAGE_NAME: cgk95/edge-service
   VERSION: latest
 
 jobs:
