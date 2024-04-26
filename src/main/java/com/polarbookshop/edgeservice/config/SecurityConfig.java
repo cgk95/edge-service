@@ -20,20 +20,29 @@ import reactor.core.publisher.Mono;
 
 @EnableWebFluxSecurity
 public class SecurityConfig {
+
+    /**
+     * @return ServerOAuth2AuthorizedClient 객체의 구현체, 웹 세션에 액세스 토큰을 저장하는 WebSessionServerOAuth2AuthorizedClientRepository 를 반환
+     */
+    @Bean
+    ServerOAuth2AuthorizedClientRepository authorizedClientRepository() {
+        return new WebSessionServerOAuth2AuthorizedClientRepository();
+    }
+
     @Bean
     SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http, ReactiveClientRegistrationRepository clientRegistrationRepository) {
         http
-                .authorizeExchange(exchange -> exchange.pathMatchers("/", "/*.css", "/*.js", "/favicon.ico").permitAll() // SPA의 정적 리소스에 대한 인증되지 않은 액세스 허용
+                .authorizeExchange(exchange -> exchange
+                        .pathMatchers("/", "/*.css", "/*.js", "/favicon.ico").permitAll() // SPA의 정적 리소스에 대한 인증되지 않은 액세스 허용
                         .pathMatchers(HttpMethod.GET, "/books/**").permitAll() // 카탈로그의 도서에 대한 인증되지 않은 액세스 허용
                         .anyExchange().authenticated())
-                .exceptionHandling(exceptionHandling -> exceptionHandling.authenticationEntryPoint(
-                        new HttpStatusServerEntryPoint(HttpStatus.UNAUTHORIZED)
-                ))
+                .exceptionHandling(exceptionHandling -> exceptionHandling
+                        .authenticationEntryPoint(new HttpStatusServerEntryPoint(HttpStatus.UNAUTHORIZED)))
                 .oauth2Login(Customizer.withDefaults()) // OAuth2/OIDC를 사용한 사용자 인증을 활성화한다
-                .logout(logout -> logout.logoutSuccessHandler(
-                        oidcLogoutSuccessHandler(clientRegistrationRepository)))
-                .csrf(csrf -> csrf.csrfTokenRepository(
-                        CookieServerCsrfTokenRepository.withHttpOnlyFalse()) // 프론트앤드와 CSRF 토큰을 교환하기 위해 쿠키 기반 방식을 사용
+                .logout(logout -> logout
+                        .logoutSuccessHandler(oidcLogoutSuccessHandler(clientRegistrationRepository)))
+                .csrf(csrf -> csrf
+                        .csrfTokenRepository(CookieServerCsrfTokenRepository.withHttpOnlyFalse()) // 프론트앤드와 CSRF 토큰을 교환하기 위해 쿠키 기반 방식을 사용
                 );
 
         return http.build();
@@ -50,13 +59,6 @@ public class SecurityConfig {
         };
     }
 
-    /**
-     * @return ServerOAuth2AuthorizedClient 객체의 구현체, 웹 세션에 액세스 토큰을 저장하는 WebSessionServerOAuth2AuthorizedClientRepository 를 반환
-     */
-    @Bean
-    ServerOAuth2AuthorizedClientRepository authorizedClientRepository() {
-        return new WebSessionServerOAuth2AuthorizedClientRepository();
-    }
 
     private ServerLogoutSuccessHandler oidcLogoutSuccessHandler(ReactiveClientRegistrationRepository clientRegistrationRepository) {
         var oidcLogoutSuccessHandler = new OidcClientInitiatedServerLogoutSuccessHandler(
